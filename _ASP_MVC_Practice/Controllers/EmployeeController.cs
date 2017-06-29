@@ -13,25 +13,73 @@ namespace _ASP_MVC_Practice.Controllers
         // GET: Employee
         public ActionResult Index()
         {
-
-            EmployeePractice emp = new EmployeePractice();
-            tblEmployee emptbl = new tblEmployee();
-
-
             CRUDExerciseEntities db = new CRUDExerciseEntities();
 
 
-            var em = from e in db.tblEmployees
-                     select e;
+            Employee emp = new Employee();
+            List<Employee> emptbl = new List<Employee>();
 
-            foreach (var data in em) {
+            try
+            {
+                var em = from e in db.tblEmployees
+                         select e;
 
+
+                if (em != null)
+                {
+                    foreach (var b in em)
+                    {
+                        Employee um = new Employee();
+                        {
+                            um.EmpId = b.EmpId;
+                            um.Name = b.Name;
+                        }
+                        emptbl.Add(um);
+                    }
+                }
             }
-            emp.PCId = emptbl.EmpId;
-
-            return View();
-
-            
+            catch (Exception)
+            {
+                return Json(new { status = false, msg = "Something went wrong..." });
+            }
+            //return Json(new { status = true, msg = "Success", data = RenderPartialViewToString("_BrandIndex", emptbl) }, JsonRequestBehavior.AllowGet);
+            return View(emptbl);
         }
+
+        public ActionResult GetEmployeeList()
+        {
+            CRUDExerciseEntities db = new CRUDExerciseEntities();
+
+
+            Employee emp = new Employee();
+            List<Employee> emptbl = new List<Employee>();
+
+            try
+            {
+                var em = from e in db.tblEmployees
+                         select e;
+
+
+                if (em != null)
+                {
+                    foreach (var b in em)
+                    {
+                        Employee um = new Employee();
+                        {
+                            um.EmpId = b.EmpId;
+                            um.Name = b.Name;
+                        }
+                        emptbl.Add(um);
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return Json(new { status = false, msg = "Something went wrong..." });
+            }
+            //return Json(new { status = true, msg = "Success", data = RenderPartialViewToString("_BrandIndex", emptbl) }, JsonRequestBehavior.AllowGet);
+            return View(emptbl);
+        }
+
     }
 }

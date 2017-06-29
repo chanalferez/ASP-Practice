@@ -1,0 +1,263 @@
+﻿@model IEnumerable<_ASP_MVC_Practice.Models.Employee>
+
+@{
+    ViewBag.Title = "Employee";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Employee</h2>
+    </div>
+</div>
+<!-- /. ROW  -->
+<hr />
+<div class="col-md-12">
+    @using (Html.BeginForm())
+    {
+        <div class="row" style="padding: 5px">
+            <div>
+                <button type="button" class="btn btn-success btn-sm" id="btnAdd" style="margin-left: 10px;"><span class="glyphicon glyphicon-plus"></span> Add Brand</button>
+                <button type="button" class="btn btn-warning btn-sm" id="btnAdd" style="margin-left: 10px;"><span class="glyphicon glyphicon-pencil"></span> Edit Brand</button>
+                <button type="button" class="btn btn-danger btn-sm" id="btnAdd" style="margin-left: 10px;"><span class="glyphicon glyphicon-trash"></span> Delete Brand</button>
+                <label style="display:none" id="lblloading">please wait.....</label>
+            </div>
+        </div>
+    }
+    <br />
+        <div class="divBrandTable">
+            <table id="BrandTable" class="table table-bordered table-hover table-responsive table-striped" style="border:0px;">
+                <thead>
+                    <tr>
+                        <th width="50">
+                           ID
+                        </th>
+                        <th width="300">
+                           Name
+                        </th>
+                        <th>
+                           Description
+                        </th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @if (Model != null)
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr data-id="@Html.DisplayFor(modelItem => item.EmpId)">
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.EmpId)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.Name)
+                                </td>
+                                <td></td>
+
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" style="text-align:center">
+                                No Data Found!
+                            </td>
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+        </div>
+</div>
+
+
+
+@section scripts{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            GenerateTable();
+        });
+
+        function GenerateTable() {
+            $('.my-modal').show();
+            $.ajax({
+                url: '@Url.Action("GetEmployeeList", "Employee")',
+                type: "GET",
+                success: function (result) {
+                    if (result.status) {
+                        $('.my-modal').hide();
+                        $('#divBrandTable').html(result.data);
+                        //$('#BrandTable').DataTable();
+                    }
+                },
+                error: function () {
+
+                }
+            });
+
+        }
+
+        $("#btnAdd").click(function () {
+            $('.modal-body #brndName').val("");
+            $('.modal-body #brndDescription').val("");
+
+            $("#AddEdit").modal(function () {
+
+            });
+            $('#isAdd').val(1);
+            $.ajax({
+                url: '@Url.Action("GetNewBrandId", "Brand")',
+                data: 'brndNumber',
+                type: "POST",
+                success: function (result) {
+                    var data1 = result.data;
+                    $('#brndNumber').val(data1);
+                },
+            });
+        });
+
+        $("#btnSave").click(function () {
+            $('.my-modal').modal("show");
+            $('#AddEdit').modal("hide");
+            var isadd = $('#isAdd').val();
+            if (isadd == 1) {
+                addBrand();
+            }
+            else {
+                update();
+            }
+
+
+        });
+
+        function addBrand() {
+            var mess = "";
+            var tType = "";
+            $.ajax({
+                url: '@Url.Action("Create","Brand")',
+                data: $('#formBrand').serialize(),
+                type: "POST",
+                success: function (result) {
+                    $('.my-modal').modal("hide");
+                    if (result.status) {
+                        mess = "Saving Record";
+                        tType = "success";
+                        $('#AddEdit').modal("hide");
+                    }
+                    else {
+                        mess = "Error While Saving.";
+                        tType = "warning";
+                    }
+                    swal(
+                        mess,
+                        result.msg,
+                        tType
+                    )
+                    GenerateTable();
+
+                },
+                error: function () {
+                }
+            });
+        }
+
+
+        function update() {
+            $.ajax({
+                url: '@Url.Action("Edit", "Brand")',
+                data: $('#formBrand').serialize(),
+                type: "POST",
+                success: function (result) {
+                    $('.my-modal').modal("hide");
+                    swal(
+                        'Modified',
+                        result.msg,
+                        'success'
+                    );
+                    GenerateTable();
+                },
+                error: function () {
+                }
+            });
+        }
+
+
+        //edit and delete
+        $(document).on("click", "#BrandTable td", function (e) {
+            var This = $(this);
+            var row = This.closest("tr");
+            var cellText = row.find('td:eq(0)').text();
+            var brName = row.find('td:eq(1)').text();
+            var brDesc = row.find('td:eq(2)').text();
+            var mess = "";
+            var tType = "";
+            var resultMess = "";
+
+            if (e.target.className == "glyphicon glyphicon-pencil" || e.target.id == "EditBtn") {
+                $('#isAdd').val = false;
+                $('.modal-body #brndName').val(brName);
+                $('.modal-body #brndNumber').val(cellText);
+                $('.modal-body #brndDescription').val(brDesc);
+                $('#AddEdit').modal("show");
+            }
+            else if (e.target.id == "DeleteBtn" || e.target.className == "glyphicon glyphicon-trash") {
+                swal({
+                    title: 'Are you sure?',
+                    text: "You won't be able to revert this brand " + brName + "!",
+                    type: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Delete it',
+                    cancelButtonText: 'Cancel!',
+                    confirmButtonClass: 'btn btn-success',
+                    cancelButtonClass: 'btn btn-danger',
+                    buttonsStyling: false
+                }).then(function () {
+                    $.ajax({
+                        url: '@Url.Action("Delete", "Brand")',
+                        data: { id: cellText },
+                        type: "POST",
+                        success: function (result) {
+                            resultMess = result.mess;
+                            if (result.status) {
+                                mess = "Deleted!";
+                                tType = "success";
+                            }
+                            else {
+                                mess = "Error while deleting.";
+                                tType = "warning";
+                            }
+                            swal(
+                                mess,
+                                resultMess,
+                                tType
+                            )
+                            GenerateTable();
+                        },
+                        error: function (e) {
+                            ////window.location.reload();
+                            //mess = "Error while deleting.";
+                            //resultMess = e.error.msg;
+                            //tType = "warning";
+                        }
+
+
+                    });
+
+                }, function (dismiss) {
+                    if (dismiss === 'cancel') {
+                        swal(
+                            'Cancelled',
+                            'Brand -' + brName + '- is safe :)',
+                            'error'
+                        )
+                    }
+                })
+            }
+
+        });
+    </script>
+}
